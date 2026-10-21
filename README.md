@@ -25,7 +25,7 @@ A single-file photo editor, color picker, and cartoon text creator — no depend
 - Google Fonts (Vazirmatn, Baloo 2)
 
 ### 📄 لایسنس
-MIT — استفاده آزاد برای همه.
+CC0 1.0 Universal — مالکیت عمومی (Public Domain). استفاده آزاد برای همه، بدون نیاز به ذکر نام.
 
 ---
 
@@ -48,7 +48,7 @@ Open `index.html` in your browser — that's it!
 - Google Fonts (Vazirmatn, Baloo 2)
 
 ### 📄 License
-MIT — free for everyone.
+CC0 1.0 Universal — Public Domain. Free for everyone, no attribution required.
 
 ---
 
