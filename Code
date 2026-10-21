@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pro Editor Studio | استودیو پرو</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg: #09090e; --glass: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.08);
+    --accent: #FFD700; --text: #e0e0e0;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+body {
+    background: var(--bg);
+    background-image: radial-gradient(circle at 15% 50%, rgba(255,215,0,0.08), transparent 25%), radial-gradient(circle at 85% 30%, rgba(255,165,0,0.05), transparent 25%);
+    color: var(--text); font-family: 'Vazirmatn', sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    padding: 15px; transition: 0.3s;
+}
+body.en-mode { direction: ltr; }
+
+.top-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    width: 100%; max-width: 550px; margin-bottom: 15px; padding: 10px 15px;
+    background: var(--glass); border: 1px solid var(--border); border-radius: 20px; backdrop-filter: blur(10px);
+}
+.app-title { font-size: 1.1rem; font-weight: 900; background: linear-gradient(90deg, #FFD700, #FFA500); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.lang-switch { background: transparent; color: var(--accent); border: 1px solid var(--border); padding: 5px 12px; border-radius: 12px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; }
+.lang-switch:hover { background: var(--glass); }
+
+.tabs { display: flex; gap: 8px; width: 100%; max-width: 550px; margin-bottom: 20px; padding: 6px; background: var(--glass); border-radius: 25px; border: 1px solid var(--border); }
+.tab-btn { flex: 1; padding: 12px 0; border: none; border-radius: 20px; background: transparent; color: #888; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: 0.3s; font-family: inherit; }
+.tab-btn.active { background: var(--accent); color: #000; box-shadow: 0 4px 15px rgba(255,215,0,0.2); }
+
+.tab-content { display: none; width: 100%; max-width: 550px; flex-direction: column; align-items: center; gap: 15px; animation: fadeIn 0.4s ease; }
+.tab-content.active { display: flex; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.canvas-container { position: relative; width: 100%; aspect-ratio: 1 / 1; max-height: 450px; background: #111; border-radius: 24px; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.placeholder-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; font-size: 0.9rem; pointer-events: none; }
+.placeholder-text span { font-size: 3rem; margin-bottom: 10px; opacity: 0.5; }
+#bgImage { width: 100%; height: 100%; object-fit: contain; pointer-events: none; transition: filter 0.3s; }
+
+.layer-wrapper { position: absolute; top: 50%; left: 50%; cursor: grab; touch-action: none; transition: outline 0.2s; }
+.layer-wrapper.active { outline: 2px solid var(--accent); outline-offset: 4px; }
+.layer-img { width: 100%; height: 100%; display: block; pointer-events: none; }
+
+.ctrl-btn { position: absolute; width: 28px; height: 28px; background: #222; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #fff; cursor: pointer; border: 1px solid var(--border); box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+.delete-btn { top: -12px; right: -12px; color: #ff4757; }
+.transform-btn { bottom: -12px; left: -12px; cursor: sw-resize; color: var(--accent); }
+
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; width: 100%; }
+.btn { padding: 12px 18px; border-radius: 15px; border: 1px solid var(--border); background: var(--glass); color: #ccc; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.2s; font-family: inherit; display: flex; align-items: center; gap: 5px; }
+.btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.btn-primary { background: rgba(255,215,0,0.1); color: var(--accent); border-color: rgba(255,215,0,0.3); }
+.btn-danger { color: #ff4757; }
+.btn-success { color: #2ed573; }
+.btn input[type="file"] { display: none; }
+
+.filters-row { display: flex; gap: 8px; overflow-x: auto; width: 100%; padding-bottom: 5px; scrollbar-width: none; }
+.filters-row::-webkit-scrollbar { display: none; }
+.filter-btn { flex: 0 0 auto; padding: 8px 16px; border-radius: 20px; background: transparent; border: 1px solid var(--border); color: #888; font-size: 0.7rem; cursor: pointer; transition: 0.2s; font-family: inherit; }
+.filter-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(255,215,0,0.05); }
+
+.color-upload-area { border: 2px dashed var(--border); border-radius: 24px; padding: 40px 20px; text-align: center; cursor: pointer; transition: 0.3s; background: var(--glass); width: 100%; }
+.color-upload-area:hover { border-color: var(--accent); }
+.color-upload-area .icon { font-size: 2.5rem; opacity: 0.5; }
+
+.color-image-wrapper { position: relative; border-radius: 24px; overflow: hidden; display: none; border: 1px solid var(--border); width: 100%; }
+.color-image-wrapper img { width: 100%; display: block; cursor: crosshair; }
+
+.color-info { display: none; margin-top: 15px; background: var(--glass); border-radius: 20px; padding: 15px; align-items: center; gap: 15px; border: 1px solid var(--border); flex-wrap: wrap; justify-content: center; }
+.color-info.active { display: flex; }
+.color-preview { width: 50px; height: 50px; border-radius: 15px; border: 2px solid #333; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+.hex-value { color: #fff; font-family: monospace; font-size: 1.1rem; background: #000; padding: 8px 16px; border-radius: 12px; border: 1px solid var(--border); cursor: pointer; }
+.palette { display: flex; gap: 8px; justify-content: center; width: 100%; margin-top: 15px; }
+.palette-color { width: 40px; height: 40px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
+.palette-color:hover { transform: scale(1.1); border-color: #fff; }
+
+.text-preview { width: 100%; min-height: 150px; display: flex; align-items: center; justify-content: center; padding: 20px; background: repeating-linear-gradient(45deg, #111, #111 10px, #151515 10px, #151515 20px); border: 1px solid var(--border); border-radius: 24px; }
+.cartoon-text { font-weight: 900; line-height: 1.4; color: var(--accent); text-align: center; transition: all 0.2s; white-space: pre-line; word-break: break-word; }
+.cartoon-text.with-shadow { text-shadow: -4px 4px 0 #3d2b1f; }
+.cartoon-text.no-shadow { text-shadow: none !important; }
+.font-vazir { font-family: 'Vazirmatn', sans-serif; }
+.font-baloo { font-family: 'Baloo 2', cursive; }
+.font-comic { font-family: 'Comic Sans MS', sans-serif; }
+
+.text-controls { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+.label { color: #888; font-size: 0.7rem; font-weight: bold; }
+
+.line-item { display: flex; gap: 8px; align-items: center; }
+.line-item input { flex: 1; padding: 12px; border-radius: 15px; border: 1px solid var(--border); background: var(--glass); color: #fff; font-size: 0.9rem; outline: none; text-align: center; font-family: inherit; }
+.line-item input:focus { border-color: var(--accent); }
+
+.font-selector { display: flex; gap: 8px; flex-wrap: wrap; }
+.font-btn { flex: 1; padding: 10px; border-radius: 15px; border: 1px solid var(--border); background: transparent; color: #888; font-size: 0.7rem; cursor: pointer; transition: 0.2s; font-family: inherit; }
+.font-btn.active { background: rgba(255,215,0,0.1); border-color: var(--accent); color: var(--accent); }
+
+.text-row { display: flex; gap: 8px; }
+.text-row input[type="text"] { flex: 1; padding: 12px; border-radius: 15px; border: 1px solid var(--border); background: var(--glass); color: #fff; text-align: center; font-family: monospace; }
+.text-row input[type="number"] { width: 80px; padding: 12px; border-radius: 15px; border: 1px solid var(--border); background: var(--glass); color: #fff; text-align: center; font-family: inherit; }
+.text-row input[type="color"] { width: 50px; height: 50px; padding: 0; border: none; border-radius: 15px; background: transparent; cursor: pointer; }
+
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #2ed573; color: #fff; padding: 12px 25px; border-radius: 30px; font-size: 0.9rem; font-weight: bold; box-shadow: 0 10px 30px rgba(46, 213, 115, 0.3); opacity: 0; transition: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 999; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="app-title" id="txt-title">🎨 استودیو پرو</div>
+    <button class="lang-switch" id="langBtn" onclick="toggleLang()">EN</button>
+</div>
+
+<div class="tabs">
+    <button class="tab-btn active" data-tab="photo" id="tab-btn-photo">🖼 عکس</button>
+    <button class="tab-btn" data-tab="color" id="tab-btn-color">🎨 رنگ‌یاب</button>
+    <button class="tab-btn" data-tab="text" id="tab-btn-text">✏️ متن</button>
+</div>
+
+<div class="tab-content active" id="tab-photo">
+    <div class="canvas-container" id="canvasContainer">
+        <div class="placeholder-text" id="imgPlaceholder">
+            <span>🖼</span>
+            <div id="txt-placeholder">عکس اصلی را انتخاب کنید</div>
+        </div>
+        <img id="bgImage" alt="">
+    </div>
+
+    <div class="filters-row" id="filtersRow" style="display:none;">
+        <button class="filter-btn active" data-filter="none" id="f-none">اصلی</button>
+        <button class="filter-btn" data-filter="grayscale(100%)" id="f-gray">سیاه‌وسفید</button>
+        <button class="filter-btn" data-filter="blur(3px)" id="f-blur">محو</button>
+        <button class="filter-btn" data-filter="invert(100%)" id="f-invert">منفی</button>
+        <button class="filter-btn" data-filter="sepia(100%)" id="f-sepia">قدیمی</button>
+    </div>
+
+    <div class="toolbar">
+        <label class="btn btn-primary">
+            <span id="txt-select-img">📁 انتخاب عکس</span>
+            <input type="file" id="mainImageInput" accept="image/*">
+        </label>
+        <label class="btn" id="addLayerBtn" style="display:none;">
+            <span id="txt-add-layer">✨ افزودن لایه</span>
+            <input type="file" id="layerImageInput" accept="image/*">
+        </label>
+        <button class="btn btn-danger" id="resetBtn" style="display:none;"><span id="txt-reset">🗑 پاکسازی</span></button>
+        <button class="btn btn-success" id="downloadBtn" style="display:none;"><span id="txt-download">💾 دانلود</span></button>
+    </div>
+</div>
+
+<div class="tab-content" id="tab-color">
+    <div class="color-upload-area" id="colorUploadArea">
+        <span class="icon">🎯</span>
+        <p id="txt-color-upload" style="margin-top:10px;">برای انتخاب عکس کلیک کنید<br><span style="font-size:0.7rem;opacity:0.6;">سپس روی نقطه مورد نظر بزنید</span></p>
+        <input type="file" id="colorFileInput" accept="image/*">
+    </div>
+    <div class="color-image-wrapper" id="colorImageWrapper">
+        <button id="colorRemoveBtn" style="position:absolute;top:10px;left:10px;background:#000;color:#fff;border:none;padding:5px 10px;border-radius:10px;cursor:pointer;z-index:2;">✕</button>
+        <img id="colorImageDisplay" alt="">
+    </div>
+    <div class="color-info" id="colorInfo">
+        <div class="color-preview" id="colorPreview"></div>
+        <div>
+            <div class="label" id="txt-color-code">کد رنگ (کلیک کنید)</div>
+            <span class="hex-value" id="hexDisplay" onclick="copyColor()">#FFD700</span>
+        </div>
+    </div>
+    <div class="palette" id="paletteContainer"></div>
+</div>
+
+<div class="tab-content" id="tab-text">
+    <div class="text-preview">
+        <div class="cartoon-text font-vazir with-shadow" id="cartoonText">متن نمونه</div>
+    </div>
+    <div class="toolbar" style="margin-bottom: 10px;">
+        <button class="btn btn-success" id="textDownloadBtn" style="flex:1;"><span id="txt-download-png">📥 دانلود PNG</span></button>
+        <button class="btn btn-primary" id="copyCssBtn"><span id="txt-copy-css">📋 کپی کد CSS</span></button>
+    </div>
+
+    <div class="text-controls">
+        <div class="label" id="txt-lines-label">📝 خطوط متن</div>
+        <div id="linesContainer"></div>
+        <button class="btn" id="addLineBtn" style="width:100%;justify-content:center;"><span id="txt-add-line">➕ افزودن خط</span></button>
+
+        <div class="label" id="txt-font-label">🖌 فونت</div>
+        <div class="font-selector">
+            <button class="font-btn active" data-font="font-vazir" id="txt-font-vazir-btn">وزیرمتن</button>
+            <button class="font-btn" data-font="font-baloo" id="txt-font-baloo-btn">بالو</button>
+            <button class="font-btn" data-font="font-comic" id="txt-font-comic-btn">کمیک</button>
+        </div>
+
+        <div class="label" id="txt-color-size-label">🎨 رنگ و سایز</div>
+        <div class="text-row">
+            <input type="text" id="hexInput" value="#FFD700" placeholder="#FFD700">
+            <input type="number" id="sizeInput" value="52" min="16" max="200">
+            <input type="color" id="colorPicker" value="#FFD700">
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
+            <label for="shadowSwitch" id="txt-shadow" style="color:#aaa;font-size:0.8rem;">سایه قهوه‌ای</label>
+            <input type="checkbox" id="shadowSwitch" checked style="width:20px;height:20px;accent-color:var(--accent);">
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">✅ کپی شد!</div>
+
+<script>
+const langData = {
+    fa: {
+        title: "🎨 استودیو پرو", tabPhoto: "🖼 عکس", tabColor: "🎨 رنگ‌یاب", tabText: "✏️ متن",
+        placeholder: "عکس اصلی را انتخاب کنید", selectImg: "📁 انتخاب عکس", addLayer: "✨ افزودن لایه",
+        reset: "🗑 پاکسازی", download: "💾 دانلود",
+        colorUpload: "برای انتخاب عکس کلیک کنید<br><span style='font-size:0.7rem;opacity:0.6;'>سپس روی نقطه مورد نظر بزنید</span>",
+        colorCode: "کد رنگ (کلیک کنید)", downloadPng: "📥 دانلود PNG", copyCss: "📋 کپی کد CSS",
+        linesLabel: "📝 خطوط متن", addLine: "➕ افزودن خط", fontLabel: "🖌 فونت",
+        fontVazir: "وزیرمتن", fontBaloo: "بالو", fontComic: "کمیک",
+        colorSizeLabel: "🎨 رنگ و سایز", shadow: "سایه قهوه‌ای",
+        fNone: "اصلی", fGray: "سیاه‌وسفید", fBlur: "محو", fInvert: "منفی", fSepia: "قدیمی",
+        toast: "✅ کپی شد!"
+    },
+    en: {
+        title: "🎨 Pro Studio", tabPhoto: "🖼 Photo", tabColor: "🎨 Picker", tabText: "✏️ Text",
+        placeholder: "Select main image", selectImg: "📁 Select Image", addLayer: "✨ Add Layer",
+        reset: "🗑 Reset", download: "💾 Save",
+        colorUpload: "Click to select image<br><span style='font-size:0.7rem;opacity:0.6;'>Then click on a point</span>",
+        colorCode: "Hex Code (Click to copy)", downloadPng: "📥 Save PNG", copyCss: "📋 Copy CSS",
+        linesLabel: "📝 Text Lines", addLine: "➕ Add Line", fontLabel: "🖌 Font",
+        fontVazir: "Vazirmatn", fontBaloo: "Baloo", fontComic: "Comic",
+        colorSizeLabel: "🎨 Color & Size", shadow: "Brown Shadow",
+        fNone: "Original", fGray: "Grayscale", fBlur: "Blur", fInvert: "Invert", fSepia: "Sepia",
+        toast: "✅ Copied!"
+    }
+};
+let cLang = 'fa';
+
+function toggleLang() {
+    cLang = cLang === 'fa' ? 'en' : 'fa';
+    var t = langData[cLang];
+    document.body.classList.toggle('en-mode', cLang === 'en');
+    document.getElementById('langBtn').innerText = cLang === 'fa' ? 'EN' : 'FA';
+
+    document.getElementById('txt-title').innerText = t.title;
+    document.getElementById('tab-btn-photo').innerText = t.tabPhoto;
+    document.getElementById('tab-btn-color').innerText = t.tabColor;
+    document.getElementById('tab-btn-text').innerText = t.tabText;
+    document.getElementById('txt-placeholder').innerText = t.placeholder;
+    document.getElementById('txt-select-img').innerText = t.selectImg;
+    document.getElementById('txt-add-layer').innerText = t.addLayer;
+    document.getElementById('txt-reset').innerText = t.reset;
+    document.getElementById('txt-download').innerText = t.download;
+    document.getElementById('txt-color-upload').innerHTML = t.colorUpload;
+    document.getElementById('txt-color-code').innerText = t.colorCode;
+    document.getElementById('txt-download-png').innerText = t.downloadPng;
+    document.getElementById('txt-copy-css').innerText = t.copyCss;
+    document.getElementById('txt-lines-label').innerText = t.linesLabel;
+    document.getElementById('txt-add-line').innerText = t.addLine;
+    document.getElementById('txt-font-label').innerText = t.fontLabel;
+    document.getElementById('txt-font-vazir-btn').innerText = t.fontVazir;
+    document.getElementById('txt-font-baloo-btn').innerText = t.fontBaloo;
+    document.getElementById('txt-font-comic-btn').innerText = t.fontComic;
+    document.getElementById('txt-color-size-label').innerText = t.colorSizeLabel;
+    document.getElementById('txt-shadow').innerText = t.shadow;
+    document.getElementById('f-none').innerText = t.fNone;
+    document.getElementById('f-gray').innerText = t.fGray;
+    document.getElementById('f-blur').innerText = t.fBlur;
+    document.getElementById('f-invert').innerText = t.fInvert;
+    document.getElementById('f-sepia').innerText = t.fSepia;
+}
+
+var tabs = document.querySelectorAll('.tab-btn');
+var contents = {
+    photo: document.getElementById('tab-photo'),
+    color: document.getElementById('tab-color'),
+    text: document.getElementById('tab-text')
+};
+tabs.forEach(function(btn) {
+    btn.onclick = function() {
+        tabs.forEach(function(b) { b.classList.remove('active'); });
+        this.classList.add('active');
+        for (var k in contents) {
+            contents[k].classList.toggle('active', k === this.dataset.tab);
+        }
+    };
+});
+
+var mainImageInput = document.getElementById('mainImageInput');
+var layerImageInput = document.getElementById('layerImageInput');
+var bgImage = document.getElementById('bgImage');
+var canvasContainer = document.getElementById('canvasContainer');
+var imgPlaceholder = document.getElementById('imgPlaceholder');
+var filtersRow = document.getElementById('filtersRow');
+var layers = [];
+var activeLayer = null;
+var dragState = null;
+
+window.onpointermove = function(e) {
+    if (!dragState) return;
+    var layer = dragState.layer;
+    if (dragState.type === 'drag') {
+        layer.x = e.clientX - dragState.offsetX;
+        layer.y = e.clientY - dragState.offsetY;
+        updateTransform(layer);
+    } else {
+        var dx = e.clientX - dragState.center.x;
+        var dy = e.clientY - dragState.center.y;
+        var curAngle = Math.atan2(dy, dx);
+        var stAngle = Math.atan2(dragState.startY - dragState.center.y, dragState.startX - dragState.center.x);
+        layer.rotation = dragState.startRot + (curAngle - stAngle) * (180 / Math.PI);
+        var dist = Math.hypot(dx, dy);
+        var distStart = Math.hypot(dragState.startX - dragState.center.x, dragState.startY - dragState.center.y);
+        if (distStart > 0) {
+            layer.width = Math.max(40, dragState.startW * (dist / distStart));
+            layer.height = layer.width / layer.ratio;
+            updateTransform(layer);
+        }
+    }
+};
+window.onpointerup = function() { dragState = null; };
+window.onpointercancel = function() { dragState = null; };
+
+mainImageInput.onchange = function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+        bgImage.onload = function() {
+            imgPlaceholder.style.display = 'none';
+            filtersRow.style.display = 'flex';
+            document.getElementById('addLayerBtn').style.display = 'flex';
+            document.getElementById('resetBtn').style.display = 'flex';
+            document.getElementById('downloadBtn').style.display = 'flex';
+        };
+        bgImage.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+};
+
+document.querySelectorAll('.filter-btn').forEach(function(btn) {
+    btn.onclick = function() {
+        bgImage.style.filter = btn.dataset.filter;
+        document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+    };
+});
+
+layerImageInput.onchange = function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) { createLayer(ev.target.result); };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+};
+
+function createLayer(src) {
+    var wrapper = document.createElement('div');
+    wrapper.className = 'layer-wrapper';
+    wrapper.innerHTML = '<img class="layer-img" alt=""><div class="ctrl-btn delete-btn">✕</div><div class="ctrl-btn transform-btn">↻</div>';
+    canvasContainer.appendChild(wrapper);
+
+    var layer = { element: wrapper, x: 0, y: 0, width: 120, height: 120, rotation: 0, ratio: 1 };
+    layers.push(layer);
+    setActive(layer);
+
+    var img = wrapper.querySelector('.layer-img');
+    img.onload = function() {
+        if (img.naturalWidth && img.naturalHeight) {
+            layer.ratio = img.naturalWidth / img.naturalHeight;
+            layer.height = layer.width / layer.ratio;
+            updateTransform(layer);
+        }
+    };
+    img.src = src;
+    updateTransform(layer);
+
+    var delBtn = wrapper.querySelector('.delete-btn');
+    delBtn.onpointerdown = function(e) { e.stopPropagation(); };
+    delBtn.onclick = function(e) {
+        e.stopPropagation();
+        wrapper.remove();
+        layers = layers.filter(function(l) { return l !== layer; });
+        if (activeLayer === layer) activeLayer = null;
+    };
+
+    var tBtn = wrapper.querySelector('.transform-btn');
+
+    wrapper.onpointerdown = function(e) {
+        if (e.target.classList.contains('ctrl-btn')) return;
+        setActive(layer);
+        dragState = {
+            type: 'drag',
+            layer: layer,
+            offsetX: e.clientX - layer.x,
+            offsetY: e.clientY - layer.y
+        };
+        wrapper.setPointerCapture(e.pointerId);
+    };
+
+    tBtn.onpointerdown = function(e) {
+        e.stopPropagation();
+        setActive(layer);
+        var rect = wrapper.getBoundingClientRect();
+        dragState = {
+            type: 'transform',
+            layer: layer,
+            center: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
+            startX: e.clientX,
+            startY: e.clientY,
+            startW: layer.width,
+            startRot: layer.rotation
+        };
+        tBtn.setPointerCapture(e.pointerId);
+    };
+}
+
+function setActive(layer) {
+    if (activeLayer) activeLayer.element.classList.remove('active');
+    activeLayer = layer;
+    if (layer) layer.element.classList.add('active');
+}
+
+function updateTransform(layer) {
+    layer.element.style.width = layer.width + 'px';
+    layer.element.style.height = layer.height + 'px';
+    layer.element.style.transform = 'translate(-50%, -50%) translate(' + layer.x + 'px, ' + layer.y + 'px) rotate(' + layer.rotation + 'deg)';
+}
+
+document.getElementById('resetBtn').onclick = function() {
+    layers.forEach(function(l) { l.element.remove(); });
+    layers = [];
+    activeLayer = null;
+    dragState = null;
+    bgImage.src = '';
+    bgImage.style.filter = 'none';
+    imgPlaceholder.style.display = 'flex';
+    filtersRow.style.display = 'none';
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.getElementById('f-none').classList.add('active');
+    document.getElementById('addLayerBtn').style.display = 'none';
+    document.getElementById('resetBtn').style.display = 'none';
+    document.getElementById('downloadBtn').style.display = 'none';
+};
+
+document.getElementById('downloadBtn').onclick = function() {
+    setActive(null);
+
+    var naturalW = bgImage.naturalWidth;
+    var naturalH = bgImage.naturalHeight;
+    if (!naturalW || !naturalH) return;
+
+    var bgSrc = bgImage.src;
+    var bgFilter = bgImage.style.filter || 'none';
+    var containerRect = canvasContainer.getBoundingClientRect();
+    var imgAspect = naturalW / naturalH;
+    var containerAspect = containerRect.width / containerRect.height;
+
+    var displayW;
+    if (imgAspect > containerAspect) {
+        displayW = containerRect.width;
+    } else {
+        displayW = containerRect.height * imgAspect;
+    }
+    var scale = naturalW / displayW;
+
+    var layerSnapshots = layers.map(function(l) {
+        return {
+            src: l.element.querySelector('.layer-img').src,
+            x: l.x, y: l.y,
+            width: l.width, height: l.height,
+            rotation: l.rotation
+        };
+    });
+
+    var canvas = document.createElement('canvas');
+    canvas.width = naturalW;
+    canvas.height = naturalH;
+    var ctx = canvas.getContext('2d');
+
+    var baseImg = new Image();
+    baseImg.onload = function() {
+        ctx.filter = bgFilter;
+        ctx.drawImage(baseImg, 0, 0, naturalW, naturalH);
+        ctx.filter = 'none';
+
+        if (layerSnapshots.length === 0) {
+            triggerDownload(canvas);
+            return;
+        }
+
+        var count = 0;
+        layerSnapshots.forEach(function(snap) {
+            var lImg = new Image();
+            lImg.onload = function() {
+                var relX = naturalW / 2 + snap.x * scale;
+                var relY = naturalH / 2 + snap.y * scale;
+                var w = snap.width * scale;
+                var h = snap.height * scale;
+                ctx.save();
+                ctx.translate(relX, relY);
+                ctx.rotate(snap.rotation * Math.PI / 180);
+                ctx.drawImage(lImg, -w / 2, -h / 2, w, h);
+                ctx.restore();
+                if (++count === layerSnapshots.length) triggerDownload(canvas);
+            };
+            lImg.onerror = function() {
+                if (++count === layerSnapshots.length) triggerDownload(canvas);
+            };
+            lImg.src = snap.src;
+        });
+    };
+    baseImg.onerror = function() { triggerDownload(canvas); };
+    baseImg.src = bgSrc;
+};
+
+function triggerDownload(canvas) {
+    var a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = 'edited-image.png';
+    a.click();
+}
+
+var colorFileInput = document.getElementById('colorFileInput');
+var colorImageDisplay = document.getElementById('colorImageDisplay');
+var colorInfo = document.getElementById('colorInfo');
+var cCanvas = document.createElement('canvas');
+var cCtx = cCanvas.getContext('2d', { willReadFrequently: true });
+
+document.getElementById('colorUploadArea').onclick = function() { colorFileInput.click(); };
+
+colorFileInput.onchange = function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+        colorImageDisplay.onload = function() {
+            document.getElementById('colorUploadArea').style.display = 'none';
+            document.getElementById('colorImageWrapper').style.display = 'block';
+            colorInfo.classList.remove('active');
+            cCanvas.width = colorImageDisplay.naturalWidth;
+            cCanvas.height = colorImageDisplay.naturalHeight;
+            cCtx.drawImage(colorImageDisplay, 0, 0);
+        };
+        colorImageDisplay.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+};
+
+colorImageDisplay.onclick = function(e) {
+    if (!colorImageDisplay.naturalWidth) return;
+    var rect = colorImageDisplay.getBoundingClientRect();
+    var x = Math.floor((e.clientX - rect.left) * (cCanvas.width / rect.width));
+    var y = Math.floor((e.clientY - rect.top) * (cCanvas.height / rect.height));
+    if (x < 0 || y < 0 || x >= cCanvas.width || y >= cCanvas.height) return;
+    var p = cCtx.getImageData(x, y, 1, 1).data;
+    var hex = '#' + [p[0], p[1], p[2]].map(function(c) { return c.toString(16).padStart(2, '0'); }).join('');
+    document.getElementById('colorPreview').style.backgroundColor = hex;
+    document.getElementById('hexDisplay').innerText = hex;
+    colorInfo.classList.add('active');
+    generatePalette(hex);
+};
+
+document.getElementById('colorRemoveBtn').onclick = function(e) {
+    e.stopPropagation();
+    document.getElementById('colorUploadArea').style.display = 'block';
+    document.getElementById('colorImageWrapper').style.display = 'none';
+    colorInfo.classList.remove('active');
+    document.getElementById('paletteContainer').innerHTML = '';
+    colorImageDisplay.src = '';
+    cCanvas.width = 0;
+    cCanvas.height = 0;
+    colorFileInput.value = '';
+};
+
+function copyColor() {
+    var hex = document.getElementById('hexDisplay').innerText;
+    navigator.clipboard.writeText(hex).then(showToast).catch(function() {});
+}
+
+function generatePalette(baseHex) {
+    var container = document.getElementById('paletteContainer');
+    container.innerHTML = '';
+    var r = parseInt(baseHex.slice(1, 3), 16);
+    var g = parseInt(baseHex.slice(3, 5), 16);
+    var b = parseInt(baseHex.slice(5, 7), 16);
+    for (var i = 0; i < 5; i++) {
+        var div = document.createElement('div');
+        div.className = 'palette-color';
+        var factor = 0.5 + (i * 0.25);
+        var nr = Math.min(255, Math.floor(r * factor) + 30);
+        var ng = Math.min(255, Math.floor(g * factor) + 30);
+        var nb = Math.min(255, Math.floor(b * factor) + 30);
+        var nHex = '#' + [nr, ng, nb].map(function(c) { return c.toString(16).padStart(2, '0'); }).join('');
+        div.style.backgroundColor = nHex;
+        div.title = nHex;
+        div.onclick = function(hex) {
+            return function() { navigator.clipboard.writeText(hex).then(showToast).catch(function() {}); };
+        }(nHex);
+        container.appendChild(div);
+    }
+}
+
+var cartoonText = document.getElementById('cartoonText');
+var linesContainer = document.getElementById('linesContainer');
+var currentFont = 'font-vazir';
+
+function addLine(val) {
+    val = val || '';
+    var div = document.createElement('div');
+    div.className = 'line-item';
+    div.innerHTML = '<input type="text" class="line-input" placeholder="..."><button class="btn btn-danger" style="padding:12px;">✕</button>';
+    var input = div.querySelector('input');
+    input.value = val;
+    input.oninput = updateText;
+    div.querySelector('button').onclick = function() {
+        div.remove();
+        updateText();
+    };
+    linesContainer.appendChild(div);
+    updateText();
+}
+
+function updateText() {
+    var lines = [];
+    document.querySelectorAll('.line-input').forEach(function(i) {
+        if (i.value.trim()) lines.push(i.value);
+    });
+    cartoonText.innerText = lines.length ? lines.join('\n') : 'متن نمونه / Sample';
+}
+
+document.getElementById('addLineBtn').onclick = function() { addLine(); };
+
+document.getElementById('sizeInput').oninput = function(e) {
+    var v = parseInt(e.target.value);
+    if (!isNaN(v) && v > 0 && v <= 400) cartoonText.style.fontSize = v + 'px';
+};
+
+document.getElementById('hexInput').oninput = function(e) {
+    var v = e.target.value;
+    if (/^#[0-9A-Fa-f]{6}$/.test(v)) {
+        cartoonText.style.color = v;
+        document.getElementById('colorPicker').value = v;
+    }
+};
+
+document.getElementById('colorPicker').oninput = function(e) {
+    var v = e.target.value;
+    cartoonText.style.color = v;
+    document.getElementById('hexInput').value = v;
+};
+
+document.getElementById('shadowSwitch').onchange = function(e) {
+    cartoonText.classList.toggle('with-shadow', e.target.checked);
+    cartoonText.classList.toggle('no-shadow', !e.target.checked);
+};
+
+document.querySelectorAll('.font-btn').forEach(function(btn) {
+    btn.onclick = function() {
+        document.querySelectorAll('.font-btn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        currentFont = btn.dataset.font;
+        cartoonText.className = 'cartoon-text ' + currentFont + ' ' + (document.getElementById('shadowSwitch').checked ? 'with-shadow' : 'no-shadow');
+    };
+});
+
+function getFontFamily() {
+    if (currentFont === 'font-vazir') return 'Vazirmatn';
+    if (currentFont === 'font-baloo') return 'Baloo 2';
+    return 'Comic Sans MS';
+}
+
+document.getElementById('copyCssBtn').onclick = function() {
+    var size = document.getElementById('sizeInput').value;
+    var color = document.getElementById('hexInput').value;
+    var hasShadow = document.getElementById('shadowSwitch').checked;
+    var css = '.my-text {\n  font-family: \'' + getFontFamily() + '\', sans-serif;\n  font-size: ' + size + 'px;\n  font-weight: 900;\n  color: ' + color + ';\n  ' + (hasShadow ? 'text-shadow: -4px 4px 0 #3d2b1f;' : '') + '\n}';
+    navigator.clipboard.writeText(css).then(showToast).catch(function() {});
+};
+
+document.getElementById('textDownloadBtn').onclick = function() {
+    var go = function() {
+        var lines = [];
+        document.querySelectorAll('.line-input').forEach(function(i) {
+            if (i.value.trim()) lines.push(i.value);
+        });
+        if (!lines.length) return;
+
+        var size = parseInt(document.getElementById('sizeInput').value) || 52;
+        var color = document.getElementById('hexInput').value;
+        var hasShadow = document.getElementById('shadowSwitch').checked;
+        var font = getFontFamily();
+
+        var canvas = document.createElement('canvas');
+        var ctx = canvas.getContext('2d');
+        ctx.font = '900 ' + size + 'px "' + font + '"';
+
+        var maxW = 0;
+        lines.forEach(function(l) { maxW = Math.max(maxW, ctx.measureText(l).width); });
+
+        canvas.width = Math.ceil(maxW + 100);
+        canvas.height = Math.ceil(lines.length * size * 1.4 + 100);
+
+        ctx.font = '900 ' + size + 'px "' + font + '"';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        var lineH = size * 1.4;
+        var startY = 50 + lineH / 2;
+
+        if (hasShadow) {
+            ctx.fillStyle = '#3d2b1f';
+            lines.forEach(function(l, i) { ctx.fillText(l, canvas.width / 2 - 4, startY + i * lineH + 4); });
+        }
+        ctx.fillStyle = color;
+        lines.forEach(function(l, i) { ctx.fillText(l, canvas.width / 2, startY + i * lineH); });
+
+        var a = document.createElement('a');
+        a.href = canvas.toDataURL('image/png');
+        a.download = 'cartoon-text.png';
+        a.click();
+    };
+
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(go).catch(go);
+    } else {
+        go();
+    }
+};
+
+var toastTimer = null;
+function showToast() {
+    var toast = document.getElementById('toast');
+    toast.innerText = langData[cLang].toast;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 2000);
+}
+
+addLine("سلام");
+addLine("دنیا");
+</script>
+</body>
+</html>
